@@ -17,7 +17,7 @@ Useful for keeping sessions active without robotic or predictable movements.
 
 ## ⚙️ Installation
 
-1. Go to the [Releases page](https://github.com/YOUR_USERNAME/mouse-mover/releases).
+1. Go to the [Releases page](https://github.com/cptimario/mouse-mover/releases).
 2. Download the latest JAR:  
    ```
    mouse-mover-1.0.0.jar
@@ -35,8 +35,8 @@ You can pass options as **keyed arguments**:
 
 | Option       | Default | Description |
 |--------------|---------|-------------|
-| `--idle=SECONDS` | `20`     | Idle threshold before moving the mouse |
-| `--interval=SECONDS` | `5` | How often to check for idleness |
+| `--idle=SECONDS` | `30`    | Idle threshold before moving the mouse |
+| `--interval=SECONDS` | `10`    | How often to check for idleness |
 | `--verbose=true` | `false` | Enable verbose logs (FINE level) |
 
 ### Examples
@@ -53,7 +53,7 @@ java -jar mouse-mover-1.0.0.jar --idle=30 --interval=10
 
 Enable verbose logging:
 ```bash
-java -jar mouse-mover-1.0.0.jar --verbose=true
+java -jar mouse-mover-1.0.0.jar --verbose
 ```
 
 ---
