@@ -39,21 +39,20 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create and push tag
-        if: steps.check_tag.outputs.exists == 'false'
+      - name: Force-create and push tag to current commit
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG=v${{ steps.version.outputs.version }}
-          echo "Tagging current commit with $TAG"
+          echo "Forcing tag $TAG to point to current commit"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # authenticate with token for pushing tag
           git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          # delete remote tag if it exists (ignore errors), create annotated tag locally, then push it
+          git push origin --delete "$TAG" || true
           git tag -a "$TAG" -m "Release $TAG"
           git push origin "$TAG"
 
-      - name: Tag already exists
-        if: steps.check_tag.outputs.exists == 'true'
-        run: echo "Tag v${{ steps.version.outputs.version }} already exists; nothing to do."
+
 

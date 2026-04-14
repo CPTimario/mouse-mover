@@ -6,7 +6,7 @@
 
     <groupId>io.github.cptimario</groupId>
     <artifactId>mouse-mover</artifactId>
-    <version>1.2.0</version>
+    <version>2.0.0</version>
     <name>Mouse Mover</name>
     <description>Moves mouse to random positions when idle, human-like, with logging.</description>
     <url>https://github.com/cptimario/mouse-mover</url>
@@ -45,6 +45,16 @@
             <version>2.2.2</version>
         </dependency>
         <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.17</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.5.32</version>
+        </dependency>
+        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>6.0.3</version>
@@ -78,7 +88,7 @@
                             <transformers>
                                 <transformer
                                         implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>io.github.cptimario.mousemover.MouseMover</mainClass>
+                                    <mainClass>io.github.cptimario.mousemover.cli.Launcher</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -93,6 +103,58 @@
                 <configuration>
                     <useModulePath>false</useModulePath>
                 </configuration>
+            </plugin>
+
+            <!-- Code formatting using Google Java Format -->
+            <plugin>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <java>
+                        <googleJavaFormat>
+                            <style>GOOGLE</style>
+                        </googleJavaFormat>
+                    </java>
+                </configuration>
+            </plugin>
+
+            <!-- Static analysis: Checkstyle -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <configLocation>config/checkstyle/google_checks.xml</configLocation>
+                    <encoding>UTF-8</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failsOnError>true</failsOnError>
+                </configuration>
+            </plugin>
+
+            <!-- SpotBugs static analysis -->
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.9.8.3</version>
+                <executions>
+                    <execution>
+                        <id>spotbugs</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
