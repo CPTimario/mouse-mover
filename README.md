@@ -1,86 +1,148 @@
 # 🖱️ Mouse Mover
 
-A small Java utility that simulates **human-like random mouse movements** when the computer is idle.
-Useful for keeping sessions active without robotic or predictable movements.
+A lightweight utility that simulates **human-like mouse movements** when your computer is idle—useful for keeping
+sessions active without looking robotic or predictable.
 
 ---
 
 ## ✨ Features
 
-* Moves mouse in **smooth, random paths** (not robotic).
-* Only triggers when the system is **idle** (no keyboard/mouse activity).
-* **Configurable** idle threshold, check interval, and movement jitter.
-* Optional **verbose logging** for debugging.
-* Logs both to console and to a `mouse_mover.log` file.
-* Cross-platform (runs anywhere with Java).
+* Moves mouse in **smooth, random paths** (not robotic)
+* Triggers only when the system is **idle** (no keyboard/mouse activity)
+* **Configurable behavior** (idle threshold, interval, jitter)
+* Optional **verbose logging** for debugging
+* 📦 **Native installers** for macOS, Windows, and Linux
+* 🌍 **Cross-platform support** (no Java installation required for end users)
 
 ---
 
-## ⚙️ Installation
+## 📦 Installation
 
-1. Go to the [Releases page](https://github.com/cptimario/mouse-mover/releases).
-2. Download the latest JAR:
+1. Go to the [Releases page](https://github.com/cptimario/mouse-mover/releases)
+2. Download the appropriate installer for your OS:
 
-   ```
-   mouse-mover-1.1.0.jar
-   ```
-3. Run with Java:
+| OS      | File Type |
+|---------|-----------|
+| macOS   | `.dmg`    |
+| Windows | `.exe`    |
+| Linux   | `.deb`    |
 
-   ```bash
-   java -jar mouse-mover-1.1.0.jar
-   ```
+3. Install and run the application
 
 ---
 
-## 🔧 Configuration
+## 🚀 Usage
 
-You can pass options as **keyed arguments**:
+### Default behavior
+
+The app runs with sensible defaults:
+
+```bash
+--idle 30 --interval 5
+```
+
+---
+
+### CLI Options
 
 | Option               | Default | Description                             |
 |----------------------|---------|-----------------------------------------|
 | `--idle=SECONDS`     | `30`    | Idle threshold before moving the mouse  |
 | `--interval=SECONDS` | `5`     | How often to check for idleness         |
 | `--jitter=PIXELS`    | `1`     | Maximum random jitter per movement step |
-| `--verbose=true`     | `false` | Enable verbose logs (FINE level)        |
+| `--verbose`          | `false` | Enable verbose logs (FINE level)        |
+
+---
 
 ### Examples
 
-Start with defaults:
+Run with defaults:
 
 ```bash
-java -jar mouse-mover-1.1.0.jar
+MouseMover
 ```
 
 Idle after 30s, check every 10s:
 
 ```bash
-java -jar mouse-mover-1.1.0.jar --idle=30 --interval=10
+MouseMover --idle 30 --interval 10
 ```
 
-Enable verbose logging and increase jitter to 3 pixels:
+Enable verbose logging and increase jitter:
 
 ```bash
-java -jar mouse-mover-1.1.0.jar --verbose --jitter=3
+MouseMover --verbose --jitter 3
 ```
 
 ---
 
-## 🛑 Stopping
+## ⚠️ Important Notes
 
-* Press **CTRL+C** in the terminal.
-* Or close the hidden window (program runs an invisible frame).
+### macOS Permissions
+
+This app requires **Accessibility permissions** to detect input and move the mouse:
+
+```
+System Settings → Privacy & Security → Accessibility
+```
+
+Without this, the app will not function correctly.
 
 ---
 
-## 📦 Releasing (for developers)
+### Windows SmartScreen
 
-If you want to build and release it yourself:
+Windows may show a warning for unsigned applications.
+This is expected for newly built tools.
+
+---
+
+### Linux
+
+`.deb` packages are supported (Debian/Ubuntu-based systems).
+
+---
+
+## 🛑 Stopping the App
+
+* Press **CTRL + C** in the terminal
+* Or close the application process
+
+---
+
+## 🧱 Development
+
+### Build locally
 
 ```bash
 mvn clean package
-mvn release:prepare
-mvn release:perform
 ```
+
+---
+
+### Create release (automated)
+
+Releases are built automatically via GitHub Actions:
+
+```bash
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+This will:
+
+* Build the application
+* Generate installers for all platforms
+* Publish a GitHub Release with downloadable assets
+
+---
+
+## 🛠 Tech Stack
+
+* Java
+* JNativeHook (global input detection)
+* AWT Robot (mouse control)
+* Picocli (CLI parsing)
 
 ---
 
