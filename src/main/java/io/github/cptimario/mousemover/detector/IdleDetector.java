@@ -107,5 +107,5 @@ public class IdleDetector {
         || p.y > screen.height - margin;
   }
 
-  public record IdleDecision(boolean shouldMove, String reason) {}
+  public record IdleDecision(boolean shouldMove, String reason) { }
 }

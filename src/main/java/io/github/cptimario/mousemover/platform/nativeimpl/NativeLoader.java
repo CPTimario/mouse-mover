@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 /** Helper to load native libraries packaged as resources under /native/. */
 public final class NativeLoader {
-  private NativeLoader() {}
+  private NativeLoader() { }
 
   public static void load(String libName) {
     String resourcePath = "/native/" + libName;
