@@ -24,6 +24,22 @@ jobs:
           chmod +x build-mac.sh
           ./build-mac.sh
 
+      - name: Generate checksum
+        working-directory: native-src/mac
+        run: |
+          sha256sum libidle_time_mac.dylib > libidle_time_mac.dylib.sha256
+        env:
+          LC_ALL: C.UTF-8
+
+      - name: Sign checksum (optional)
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          echo "$GPG_PRIVATE_KEY" > private.key
+          gpg --batch --import private.key
+          gpg --batch --yes --detach-sign --output libidle_time_mac.dylib.sha256.sig libidle_time_mac.dylib.sha256
+
       - name: Build Java (for smoke test)
         run: mvn -DskipTests package
 
@@ -71,6 +87,22 @@ jobs:
         run: |
           chmod +x build-win.sh || true
           ./build-win.sh
+
+      - name: Generate checksum
+        working-directory: native-src/win
+        shell: bash
+        run: |
+          sha256sum idle_time_win.dll > idle_time_win.dll.sha256
+
+      - name: Sign checksum (optional)
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          echo "$GPG_PRIVATE_KEY" > private.key
+          gpg --batch --import private.key
+          gpg --batch --yes --detach-sign --output idle_time_win.dll.sha256.sig idle_time_win.dll.sha256
 
       - name: Build Java (for smoke test)
         run: mvn -DskipTests package
@@ -125,6 +157,21 @@ jobs:
           # downloaded artifacts are placed in workspace root by download-artifact
           if [ -f libidle_time_mac.dylib ]; then mv libidle_time_mac.dylib src/main/resources/native/; fi
           if [ -f idle_time_win.dll ]; then mv idle_time_win.dll src/main/resources/native/; fi
+          if [ -f libidle_time_mac.dylib.sha256 ]; then mv libidle_time_mac.dylib.sha256 src/main/resources/native/; fi
+          if [ -f idle_time_win.dll.sha256 ]; then mv idle_time_win.dll.sha256 src/main/resources/native/; fi
+          if [ -f libidle_time_mac.dylib.sha256.sig ]; then mv libidle_time_mac.dylib.sha256.sig src/main/resources/native/; fi
+          if [ -f idle_time_win.dll.sha256.sig ]; then mv idle_time_win.dll.sha256.sig src/main/resources/native/; fi
+
+      - name: Generate CHECKSUMS.txt for packaging
+        run: |
+          cd src/main/resources/native
+          echo "" > CHECKSUMS.txt
+          for f in *.sha256 2>/dev/null; do
+            if [ -f "$f" ]; then
+              # normalize "<hash>  filename" -> keep as-is
+              cat "$f" >> CHECKSUMS.txt
+            fi
+          done
 
       - name: Build packaged jar with natives
         run: mvn -DskipTests package

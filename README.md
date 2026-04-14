@@ -29,6 +29,27 @@ sessions active without looking robotic or predictable.
 
 3. Install and run the application
 
+### Alternatively: Use CI-built artifacts (developer or advanced users)
+
+If you prefer the lightweight packaged JAR or need native libraries directly, the GitHub Actions workflow `build-native` produces artifacts for each run:
+
+1. Open the repository Actions page and select the latest `build-native` run.
+2. In the selected run, open the **Artifacts** section and download one of the following:
+
+   - `mouse-mover-package` — a packaged JAR that includes native libraries for macOS and Windows (embedded under `native/` resources)
+   - `libidle_time_mac.dylib` — macOS native library
+   - `idle_time_win.dll` — Windows native library
+
+3. If you downloaded the packaged JAR, run it directly with:
+
+```bash
+java -jar mouse-mover-<version>-shaded.jar
+```
+
+4. If you downloaded platform-native libraries and want to test them locally, place the binaries under `src/main/resources/native/` (for quick local testing) and run the application from Maven, or use the packaged JAR approach above.
+
+Security: the workflow also publishes SHA-256 checksums and optional GPG signatures for native artifacts. When present, the packaged JAR contains a `native/CHECKSUMS.txt` file that `NativeLoader` verifies at runtime before loading any embedded native library.
+
 ---
 
 ## 🚀 Usage
