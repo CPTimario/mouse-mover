@@ -3,12 +3,7 @@ package io.github.cptimario.mousemover.core;
 import io.github.cptimario.mousemover.detector.IdleDetector;
 import io.github.cptimario.mousemover.platform.IdleTimeProviderFactory;
 import io.github.cptimario.mousemover.platform.JvmIdleTimeProvider;
-import java.awt.AWTException;
-import java.awt.Dimension;
-import java.awt.MouseInfo;
-import java.awt.Point;
-import java.awt.Robot;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.time.Instant;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
@@ -67,9 +62,37 @@ public class MouseMoverService {
     }
   }
 
+  /** Package-private constructor used for testing to inject deterministic collaborators. */
+  MouseMoverService(
+      final int idleSeconds,
+      final int intervalSeconds,
+      final int graceSeconds,
+      final int jitter,
+      final int edgeMargin,
+      final boolean fullscreenDetection,
+      final boolean micro,
+      final boolean verbose,
+      final Random random,
+      final Point initialMousePosition,
+      final IdleDetector detector) {
+    this.idleSeconds = idleSeconds;
+    this.intervalSeconds = intervalSeconds;
+    this.graceSeconds = Math.max(0, graceSeconds);
+    this.jitter = jitter;
+    this.edgeMargin = Math.max(0, edgeMargin);
+    this.fullscreenDetection = fullscreenDetection;
+    this.micro = micro;
+    this.verbose = verbose;
+    this.random = (random == null) ? new Random() : random;
+    this.stopLatch = new CountDownLatch(1);
+    this.lastMousePosition =
+        (initialMousePosition == null) ? new Point(0, 0) : initialMousePosition;
+    this.detector = detector;
+  }
+
   public void start() {
     try {
-      Robot robot = new Robot();
+      Robot robot = createRobot();
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
       final JvmIdleTimeProvider fallback = new JvmIdleTimeProvider();
@@ -86,12 +109,54 @@ public class MouseMoverService {
               random);
 
       executor = Executors.newSingleThreadScheduledExecutor();
+      MouseRobot robotWrap = new AwtMouseRobot(robot);
       executor.scheduleAtFixedRate(
-          () -> checkIdleAndMove(robot, screenSize), 0, intervalSeconds, TimeUnit.SECONDS);
+          () -> checkIdleAndMove(robotWrap, screenSize), 0, intervalSeconds, TimeUnit.SECONDS);
 
       running = true;
       logger.info("Mouse mover service started");
     } catch (AWTException e) {
+      logger.error("Failed to start MouseMoverService: {}", e.getMessage(), e);
+      stopLatch.countDown();
+    }
+  }
+
+  /**
+   * Package-private helper to create a Robot; extracted for testing so tests can override and
+   * simulate AWT failures.
+   */
+  Robot createRobot() throws AWTException {
+    return new Robot();
+  }
+
+  /**
+   * Start the service using a provided test-friendly {@link MouseRobot} and screen size. This is
+   * package-private and intended for tests so we can avoid creating a real {@link Robot}.
+   */
+  void startWithRobot(MouseRobot robotWrap, Dimension screenSize) {
+    try {
+      final JvmIdleTimeProvider fallback = new JvmIdleTimeProvider();
+      final var provider = IdleTimeProviderFactory.create(fallback);
+      if (detector == null) {
+        detector =
+            new IdleDetector(
+                provider,
+                idleSeconds,
+                graceSeconds,
+                intervalSeconds,
+                fullscreenDetection,
+                edgeMargin,
+                micro,
+                random);
+      }
+
+      executor = Executors.newSingleThreadScheduledExecutor();
+      executor.scheduleAtFixedRate(
+          () -> checkIdleAndMove(robotWrap, screenSize), 0, intervalSeconds, TimeUnit.SECONDS);
+
+      running = true;
+      logger.info("Mouse mover service started");
+    } catch (Exception e) {
       logger.error("Failed to start MouseMoverService: {}", e.getMessage(), e);
       stopLatch.countDown();
     }
@@ -111,7 +176,7 @@ public class MouseMoverService {
     }
   }
 
-  private void checkIdleAndMove(Robot robot, Dimension screenSize) {
+  void checkIdleAndMove(MouseRobot robot, Dimension screenSize) {
     Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();
     if (!currentMousePosition.equals(lastMousePosition)) {
       detector.notifyActivity();
@@ -138,7 +203,7 @@ public class MouseMoverService {
     }
   }
 
-  private void moveMouseHumanLike(Robot robot, Dimension screenSize) {
+  void moveMouseHumanLike(MouseRobot robot, Dimension screenSize) {
     if (micro) {
       final int dx = random.nextInt(5) - 2;
       final int dy = random.nextInt(5) - 2;
@@ -154,7 +219,7 @@ public class MouseMoverService {
       }
       robot.mouseMove(nx, ny);
       try {
-        Thread.sleep(10 + random.nextInt(40));
+        robot.sleepMillis(10 + random.nextInt(40));
       } catch (InterruptedException ignored) {
       }
       return;
@@ -184,7 +249,7 @@ public class MouseMoverService {
       startY += dy + (random.nextInt(2 * jitter + 1) - jitter);
       robot.mouseMove(startX, startY);
       try {
-        Thread.sleep(10 + random.nextInt(30));
+        robot.sleepMillis(10 + random.nextInt(30));
       } catch (InterruptedException ignored) {
       }
     }

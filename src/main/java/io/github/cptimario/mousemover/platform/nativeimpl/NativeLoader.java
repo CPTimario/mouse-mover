@@ -13,8 +13,7 @@ import java.util.Scanner;
 
 /** Helper to load native libraries packaged as resources under /native/. */
 public final class NativeLoader {
-  private NativeLoader() {
-  }
+  private NativeLoader() {}
 
   public static void load(String libName) {
     String resourcePath = "/native/" + libName;
@@ -60,7 +59,7 @@ public final class NativeLoader {
     }
   }
 
-  private static Map<String, String> loadChecksums() {
+  static Map<String, String> loadChecksums() {
     Map<String, String> map = new HashMap<>();
     try (InputStream is = NativeLoader.class.getResourceAsStream("/native/CHECKSUMS.txt")) {
       if (is == null) return map;
@@ -80,7 +79,7 @@ public final class NativeLoader {
     return map;
   }
 
-  private static String bytesToHex(byte[] bytes) {
+  static String bytesToHex(byte[] bytes) {
     StringBuilder sb = new StringBuilder(bytes.length * 2);
     for (byte b : bytes) {
       sb.append(String.format("%02x", b & 0xff));

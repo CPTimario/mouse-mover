@@ -1,7 +1,6 @@
 package io.github.cptimario.mousemover.detector;
 
 import io.github.cptimario.mousemover.platform.IdleTimeProvider;
-
 import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
@@ -84,7 +83,7 @@ public class IdleDetector {
     }
   }
 
-  private boolean isLikelyFullscreen(Dimension screenSize) {
+  boolean isLikelyFullscreen(Dimension screenSize) {
     try {
       Rectangle bounds =
           GraphicsEnvironment.getLocalGraphicsEnvironment()
@@ -105,6 +104,5 @@ public class IdleDetector {
         || p.y > screen.height - margin;
   }
 
-  public record IdleDecision(boolean shouldMove, String reason) {
-  }
+  public record IdleDecision(boolean shouldMove, String reason) {}
 }

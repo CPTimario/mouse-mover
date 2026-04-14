@@ -131,6 +131,14 @@ This is expected for newly built tools.
 
 ---
 
+The CLI is designed to run continuously: when you start the app it creates a background scheduled task that periodically
+checks for idleness and moves the mouse. The process intentionally blocks (the main thread calls `join()` on the
+service) and will keep running until the service is stopped. Use CTRL+C (or send SIGTERM) to trigger the JVM shutdown
+hook which calls `stop()` and allows the process to exit cleanly.
+
+If you are writing automated tests or need a single-run invocation for debugging, prefer the test-friendly entrypoints
+or patterns described below.
+
 ## 🧱 Development
 
 ### Build locally
@@ -166,6 +174,29 @@ This will:
 * Picocli (CLI parsing)
 
 ---
+
+## 🧪 Testing and non-blocking runs
+
+When running under a test harness you should avoid starting the real, blocking service. The project exposes a couple of
+test-friendly hooks:
+
+- `Launcher.executeWithReturn(String[] args)` — invokes the CLI and returns the exit code without calling
+  `System.exit(...)`, useful for unit tests that want to exercise CLI parsing.
+- `Launcher#createService()` — a package-private factory method used by `Launcher` to instantiate the
+  `MouseMoverService`. Tests can subclass `Launcher` and override this to return a no-op or deterministic service so
+  `call()` returns immediately (see `src/test/java/.../LauncherTest.java`).
+- `MouseMoverService.startWithRobot(MouseRobot, Dimension)` — a package-private test-friendly start method that accepts
+  a `MouseRobot` implementation (the `TestMouseRobot` under `src/test/java/.../testutil/` records mouse moves and no-ops
+  sleeps). Tests can start the service, allow the scheduled task to run, then call `stop()` and `join()` to ensure
+  deterministic cleanup (see `MouseMoverServiceStartTest`).
+
+Run the full test suite with Maven:
+
+```bash
+mvn -DskipTests=false test
+```
+
+These patterns ensure tests don't hang the build by starting a long-running CLI instance.
 
 ## 📜 License
 

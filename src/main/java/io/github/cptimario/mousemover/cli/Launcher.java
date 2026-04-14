@@ -46,22 +46,20 @@ public class Launcher implements Callable<Integer> {
   int edgeMargin;
 
   static void main(String[] args) {
-    int exitCode = new CommandLine(new Launcher()).execute(args);
-    System.exit(exitCode);
+    System.exit(executeWithReturn(args));
   }
 
   @Override
   public Integer call() {
-    final MouseMoverService service =
-        new MouseMoverService(
-            idleSeconds,
-            intervalSeconds,
-            graceSeconds,
-            jitter,
-            edgeMargin,
-            fullscreenDetection,
-            micro,
-            verbose);
+    // If tests set `testMode` we should not start the long-running service so
+    // the test-friendly entrypoint (`executeForTests`) can execute CLI parsing
+    // without hanging the JVM.
+    if (testMode) {
+      createService();
+      return 0;
+    }
+
+    final MouseMoverService service = createService();
     service.start();
 
     Runtime.getRuntime().addShutdownHook(new Thread(service::stop));
@@ -69,4 +67,36 @@ public class Launcher implements Callable<Integer> {
     service.join();
     return 0;
   }
+
+  /** Package-private hook to create the service; tests may override. */
+  MouseMoverService createService() {
+    return new MouseMoverService(
+        idleSeconds,
+        intervalSeconds,
+        graceSeconds,
+        jitter,
+        edgeMargin,
+        fullscreenDetection,
+        micro,
+        verbose);
+  }
+
+  /** Test-friendly entry that returns the CLI exit code without terminating the JVM. */
+  static int executeWithReturn(String[] args) {
+    return new CommandLine(new Launcher()).execute(args);
+  }
+
+  /**
+   * Test-friendly entrypoint that executes CLI parsing but does not start the long-running service.
+   * Tests may call this to avoid hanging the JVM; it returns the CLI exit code.
+   */
+  static int executeForTests(String[] args) {
+    Launcher l = new Launcher();
+    l.testMode = true;
+    return new CommandLine(l).execute(args);
+  }
+
+  // package-private flag used by the test-friendly entrypoint to avoid starting the
+  // long-running service. Default is false for normal CLI runs.
+  boolean testMode = false;
 }

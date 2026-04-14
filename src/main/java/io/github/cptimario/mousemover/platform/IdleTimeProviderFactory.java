@@ -8,8 +8,7 @@ import io.github.cptimario.mousemover.platform.nativeimpl.WindowsIdleTimeProvide
  * provider.
  */
 public final class IdleTimeProviderFactory {
-  private IdleTimeProviderFactory() {
-  }
+  private IdleTimeProviderFactory() {}
 
   public static IdleTimeProvider create(JvmIdleTimeProvider fallback) {
     String os = System.getProperty("os.name", "").toLowerCase();
