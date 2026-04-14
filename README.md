@@ -7,12 +7,14 @@ sessions active without looking robotic or predictable.
 
 ## ✨ Features
 
-* Moves mouse in **smooth, random paths** (not robotic)
-* Triggers only when the system is **idle** (no keyboard/mouse activity)
-* **Configurable behavior** (idle threshold, interval, jitter)
-* Optional **verbose logging** for debugging
-* 📦 **Native installers** for macOS, Windows, and Linux
-* 🌍 **Cross-platform support** (no Java installation required for end users)
+- Moves mouse in **smooth, random paths** (not robotic)
+- Triggers only when the system is **idle** (no keyboard/mouse activity)
+- **Configurable behavior** (idle threshold, interval, jitter, grace period, edge margin)
+- Optional **verbose logging** (DEBUG level) for troubleshooting
+- Optional **micro-movements** mode for subtle jitter instead of large moves
+- Built-in **fullscreen detection** to avoid moving the mouse during fullscreen apps
+- 📦 **Native installers** for macOS, Windows, and Linux (packaged artifacts include native libs)
+- 🌍 **Cross-platform support** (native launchers produced so end users don't need to install Java)
 
 ---
 
@@ -56,22 +58,26 @@ Security: the workflow also publishes SHA-256 checksums and optional GPG signatu
 
 ### Default behavior
 
-The app runs with sensible defaults:
+The app runs with sensible defaults. Important defaults in the current codebase are:
 
 ```bash
---idle 30 --interval 5
+--idle 30 --interval 5 --jitter 1 --grace 5 --edge-margin 50 --fullscreen-detection=true
 ```
 
 ---
 
 ### CLI Options
 
-| Option               | Default | Description                             |
-|----------------------|---------|-----------------------------------------|
-| `--idle=SECONDS`     | `30`    | Idle threshold before moving the mouse  |
-| `--interval=SECONDS` | `5`     | How often to check for idleness         |
-| `--jitter=PIXELS`    | `1`     | Maximum random jitter per movement step |
-| `--verbose`          | `false` | Enable verbose logs (FINE level)        |
+| Option                       | Default     | Description                                                   |
+|-----------------------------:|:-----------:|:-------------------------------------------------------------|
+| `--idle=SECONDS`             | `30`        | Idle threshold before moving the mouse (seconds)              |
+| `--interval=SECONDS`         | `5`         | How often to check for idleness (seconds)                    |
+| `--jitter=PIXELS`            | `1`         | Maximum random jitter per movement step                      |
+| `--verbose`                  | `false`     | Enable verbose logs (DEBUG level)                            |
+| `--grace=SECONDS`            | `5`         | Extra randomized grace period added after activity (seconds) |
+| `--edge-margin=PIXELS`       | `50`        | Pixel margin from screen edge to suppress movement            |
+| `--fullscreen-detection`     | `true`      | Avoid moving mouse when a fullscreen app is detected         |
+| `--micro`                    | `false`     | Use subtle micro-movements instead of full random moves      |
 
 ---
 
@@ -93,6 +99,12 @@ Enable verbose logging and increase jitter:
 
 ```bash
 MouseMover --verbose --jitter 3
+```
+
+Enable micro-movements and increase the grace period:
+
+```bash
+MouseMover --micro --grace 10
 ```
 
 ---
