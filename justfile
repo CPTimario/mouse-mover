@@ -24,12 +24,12 @@ help:
 # Apply code formatting (Spotless apply)
 format:
 	@echo "Running Spotless apply..."
-	mvn com.diffplug.spotless:spotless-maven-plugin:3.4.0:apply
+	mvn spotless:apply
 
 # Check code formatting (CI-style)
 format-check:
 	@echo "Running Spotless check..."
-	mvn -B -U com.diffplug.spotless:spotless-maven-plugin:3.4.0:check
+	mvn -B -U spotless:check
 
 # Run full build (static analysis, tests, package)
 build:
@@ -49,7 +49,7 @@ test:
 # Combined local CI check (format-check + verify)
 ci:
 	@echo "Running local CI checks: Spotless + verify"
-	mvn -B -U com.diffplug.spotless:spotless-maven-plugin:3.4.0:check && mvn -B -U verify
+	mvn -B -U spotless:check && mvn -B -U verify
 
 # Create and push a release tag v<project.version> (requires push permissions)
 tag-release:
@@ -66,7 +66,7 @@ tag-release:
 # Apply formatting and commit the result
 format-commit:
 	@echo "Applying formatting and committing changes (if any)"
-	mvn com.diffplug.spotless:spotless-maven-plugin:3.4.0:apply
+	mvn spotless:apply
 	git add -A
 	git commit -m "Apply Spotless formatting (just format)" || echo "No formatting changes to commit"
 
