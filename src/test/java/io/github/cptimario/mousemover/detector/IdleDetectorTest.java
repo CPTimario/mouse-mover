@@ -4,7 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.github.cptimario.mousemover.platform.IdleTimeProvider;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Point;
 import java.time.Instant;
 import java.util.Random;
 import org.junit.jupiter.api.Test;

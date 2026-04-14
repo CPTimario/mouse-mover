@@ -1,7 +1,10 @@
 package io.github.cptimario.mousemover.detector;
 
 import io.github.cptimario.mousemover.platform.IdleTimeProvider;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.GraphicsEnvironment;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;

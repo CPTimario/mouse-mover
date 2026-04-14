@@ -3,7 +3,9 @@ package io.github.cptimario.mousemover.detector;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import io.github.cptimario.mousemover.platform.IdleTimeProvider;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Toolkit;
 import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
