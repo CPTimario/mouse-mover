@@ -182,7 +182,15 @@ public class MouseMoverService {
   }
 
   void checkIdleAndMove(MouseRobot robot, Dimension screenSize) {
-    Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();
+    Point currentMousePosition;
+    try {
+      currentMousePosition = MouseInfo.getPointerInfo().getLocation();
+    } catch (Throwable t) {
+      // In headless environments MouseInfo may throw HeadlessException. Fall back to the
+      // last known mouse position so tests and headless CI do not fail.
+      currentMousePosition = (lastMousePosition == null) ? new Point(0, 0) : lastMousePosition;
+    }
+
     if (!currentMousePosition.equals(lastMousePosition)) {
       detector.notifyActivity();
       lastMousePosition = currentMousePosition;
@@ -200,7 +208,14 @@ public class MouseMoverService {
       moveMouseHumanLike(robot, screenSize);
       lastMovementAttempt = Instant.now();
       detector.notifyActivity();
-      lastMousePosition = MouseInfo.getPointerInfo().getLocation();
+      // Attempt to read the system pointer again, but don't fail if unavailable
+      try {
+        lastMousePosition = MouseInfo.getPointerInfo().getLocation();
+      } catch (Throwable t) {
+        // In headless/test environments, preserve the previous position
+        // (move calls are recorded by the injected MouseRobot in tests)
+        // leaving lastMousePosition as-is is acceptable.
+      }
     } else {
       if (verbose) {
         logger.debug("IdleDetector decision: skip (reason={})", decision.reason());

@@ -20,8 +20,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '25'
+
       - name: Check formatting
-        run: mvn -B -U com.diffplug.spotless:spotless-maven-plugin:check
+        run: mvn -B -U spotless:check
 
       - name: Cache Maven packages
         uses: actions/cache@v4
