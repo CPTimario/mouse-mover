@@ -10,7 +10,6 @@ import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
 import java.awt.*;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Random;
 import java.util.concurrent.Callable;
@@ -39,8 +38,21 @@ public class MouseMover implements Callable<Integer> {
     @Option(names = "--jitter", description = "Max pixel jitter per step", defaultValue = "1")
     int jitter;
 
-    private Instant lastActivity = Instant.now();
+    @Option(names = "--grace", description = "Extra grace period after activity (seconds)", defaultValue = "5")
+    int graceSeconds;
+
+    @Option(names = "--fullscreen-detection", description = "Avoid moving mouse when fullscreen app is active")
+    boolean fullscreenDetection = true;
+
+    @Option(names = "--micro", description = "Use subtle micro-movements instead of large moves")
+    boolean micro;
+
+    @Option(names = "--edge-margin", description = "Pixel margin from screen edge to suppress movement", defaultValue = "50")
+    int edgeMargin;
+
     private Point lastMousePosition = MouseInfo.getPointerInfo().getLocation();
+    private Instant lastMovementAttempt = Instant.MIN;
+    private IdleDetector detector;
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new MouseMover()).execute(args);
@@ -60,6 +72,11 @@ public class MouseMover implements Callable<Integer> {
 
         Robot robot = new Robot();
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+
+        // Initialize IdleTimeProvider and IdleDetector with current options
+        JvmIdleTimeProvider fallback = new JvmIdleTimeProvider();
+        IdleTimeProvider provider = IdleTimeProviderFactory.create(fallback);
+        detector = new IdleDetector(provider, idleSeconds, graceSeconds, intervalSeconds, fullscreenDetection, edgeMargin, micro, random);
 
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         executor.scheduleAtFixedRate(() -> checkIdleAndMove(robot, screenSize), 0, intervalSeconds, TimeUnit.SECONDS);
@@ -87,17 +104,28 @@ public class MouseMover implements Callable<Integer> {
     private void checkIdleAndMove(Robot robot, Dimension screenSize) {
         Point currentMousePosition = MouseInfo.getPointerInfo().getLocation();
         if (!currentMousePosition.equals(lastMousePosition)) {
-            lastActivity = Instant.now();
+            // notify activity to the provider-backed detector
+            detector.notifyActivity();
             lastMousePosition = currentMousePosition;
             if (verbose) {
                 logger.fine("Mouse moved globally, resetting idle timer.");
             }
         }
 
-        if (Duration.between(lastActivity, Instant.now()).toSeconds() >= idleSeconds) {
+        IdleDetector.IdleDecision decision = detector.evaluate(lastMovementAttempt, lastMousePosition, screenSize);
+
+        if (decision.shouldMove) {
+            if (verbose) {
+                logger.fine("IdleDetector decision: move (reason=" + decision.reason + ")");
+            }
             moveMouseHumanLike(robot, screenSize);
-            lastActivity = Instant.now();
+            lastMovementAttempt = java.time.Instant.now();
+            if (detector != null) detector.notifyActivity();
             lastMousePosition = MouseInfo.getPointerInfo().getLocation();
+        } else {
+            if (verbose) {
+                logger.fine("IdleDetector decision: skip (reason=" + decision.reason + ")");
+            }
         }
     }
 
@@ -149,10 +177,27 @@ public class MouseMover implements Callable<Integer> {
         if (verbose) {
             logger.fine("Mouse/keyboard activity detected globally, resetting idle timer.");
         }
-        lastActivity = Instant.now();
+        if (detector != null) detector.notifyActivity();
     }
 
     private void moveMouseHumanLike(Robot robot, Dimension screenSize) {
+        if (micro) {
+            // subtle micro-jitter
+            int dx = random.nextInt(5) - 2;
+            int dy = random.nextInt(5) - 2;
+            int nx = Math.max(0, Math.min(screenSize.width - 1, lastMousePosition.x + dx));
+            int ny = Math.max(0, Math.min(screenSize.height - 1, lastMousePosition.y + dy));
+            if (verbose) {
+                logger.fine(String.format("Micro-jitter moving mouse from (%d,%d) to (%d,%d)", lastMousePosition.x, lastMousePosition.y, nx, ny));
+            }
+            robot.mouseMove(nx, ny);
+            try {
+                Thread.sleep(10 + random.nextInt(40));
+            } catch (InterruptedException ignored) {
+            }
+            return;
+        }
+
         int targetX = random.nextInt(screenSize.width);
         int targetY = random.nextInt(screenSize.height);
 
