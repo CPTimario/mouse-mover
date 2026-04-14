@@ -65,6 +65,16 @@ jobs:
             --mac-package-name "MouseMover" \
             --arguments "--idle 30 --interval 5"
 
+      - name: Build mac native (dylib)
+        if: runner.os == 'macOS'
+        working-directory: native-src/mac
+        run: |
+          chmod +x build-mac.sh
+          ./build-mac.sh
+          sha256sum libidle_time_mac.dylib > libidle_time_mac.dylib.sha256
+        env:
+          LC_ALL: C.UTF-8
+
       # -----------------------
       # Windows (.exe)
       # -----------------------
@@ -82,6 +92,15 @@ jobs:
             --icon src/main/resources/icon.ico \
             --win-console \
             --arguments "--idle 30 --interval 5"
+
+      - name: Build windows native (dll)
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: native-src/win
+        run: |
+          chmod +x build-win.sh || true
+          ./build-win.sh
+          sha256sum idle_time_win.dll > idle_time_win.dll.sha256
 
       # -----------------------
       # Linux (.deb)
@@ -107,7 +126,7 @@ jobs:
           VERSION=${{ steps.version.outputs.version }}
           OS=${{ runner.os }}
 
-          for f in *.dmg *.exe *.deb; do
+          for f in *.dmg *.exe *.deb libidle_time_mac.dylib idle_time_win.dll *.sha256 *.sha256.sig; do
             [ -f "$f" ] || continue
             mv "$f" "${APP_NAME}-${VERSION}-${OS}.${f##*.}"
           done
@@ -123,6 +142,10 @@ jobs:
             *.dmg
             *.exe
             *.deb
+            libidle_time_mac.dylib
+            idle_time_win.dll
+            *.sha256
+            *.sha256.sig
 
   # -----------------------
   # Create GitHub Release
