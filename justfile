@@ -49,7 +49,8 @@ test:
 # Combined local CI check (format-check + verify)
 ci:
 	@echo "Running local CI checks: Spotless + verify"
-	mvn -B -U spotless:check && mvn -B -U verify
+	mvn -B -U spotless:check
+	mvn -B -U verify
 
 # Create and push a release tag v<project.version> (requires push permissions)
 tag-release:

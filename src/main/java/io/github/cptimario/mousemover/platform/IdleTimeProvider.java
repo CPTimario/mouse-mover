@@ -8,5 +8,6 @@ public interface IdleTimeProvider {
   long getIdleTimeSeconds();
 
   /** Notify the provider that activity occurred (keyboard/mouse). Default no-op. */
-  default void markActivity() { }
+  default void markActivity() {
+  }
 }
