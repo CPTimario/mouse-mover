@@ -8,7 +8,8 @@
     <module name="TreeWalker">
         <!-- Basic coding style rules (subset of Google Checks) -->
         <module name="WhitespaceAfter"/>
-        <module name="WhitespaceAround"/>
+        <!-- WhitespaceAround removed: formatting is handled by Spotless/formatter to avoid
+             conflicts where the formatter and Checkstyle disagree (e.g. empty braces {}). -->
         <module name="AvoidStarImport"/>
         <module name="UnusedImports"/>
         <module name="MissingOverride"/>
