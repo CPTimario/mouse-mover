@@ -8,11 +8,7 @@ import io.github.cptimario.mousemover.platform.IdleTimeProvider;
  */
 public class WindowsIdleTimeProvider implements IdleTimeProvider {
   static {
-    try {
-      NativeLoader.load("idle_time_win.dll");
-    } catch (Throwable t) {
-      // allow fallback
-    }
+    NativeLoader.load("idle_time_win.dll");
   }
 
   private native long getIdleTimeMillisNative();

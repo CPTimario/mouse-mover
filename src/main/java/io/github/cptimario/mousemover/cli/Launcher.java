@@ -1,7 +1,10 @@
 package io.github.cptimario.mousemover.cli;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import io.github.cptimario.mousemover.core.MouseMoverService;
 import java.util.concurrent.Callable;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
@@ -57,6 +60,18 @@ public class Launcher implements Callable<Integer> {
     if (testMode) {
       createService();
       return 0;
+    }
+
+    // If the user requested verbose output, programmatically lower the root
+    // logging level to DEBUG so debug statements (logger.debug) are emitted.
+    try {
+      if (verbose) {
+        LoggerContext ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
+        ctx.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).setLevel(Level.DEBUG);
+      }
+    } catch (Throwable ignored) {
+      // If logback is not available or changing level fails, continue without
+      // crashing; verbose will still control internal verbose flags.
     }
 
     final MouseMoverService service = createService();

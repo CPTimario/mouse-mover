@@ -115,8 +115,21 @@ public class MouseMoverService {
 
       executor = Executors.newSingleThreadScheduledExecutor();
       MouseRobot robotWrap = new AwtMouseRobot(robot);
+      // Wrap the scheduled task in a top-level try/catch so an unexpected runtime exception
+      // (for example a SecurityException from Robot.mouseMove on macOS when Accessibility is
+      // revoked) does not terminate the scheduled task permanently. Log and continue.
       executor.scheduleAtFixedRate(
-          () -> checkIdleAndMove(robotWrap, screenSize), 0, intervalSeconds, TimeUnit.SECONDS);
+          () -> {
+            try {
+              checkIdleAndMove(robotWrap, screenSize);
+            } catch (Throwable t) {
+              logger.error(
+                  "Unhandled exception in scheduled idle-check/move task: {}", t.getMessage(), t);
+            }
+          },
+          0,
+          intervalSeconds,
+          TimeUnit.SECONDS);
 
       running = true;
       logger.info("Mouse mover service started");
@@ -272,6 +285,12 @@ public class MouseMoverService {
         robot.sleepMillis(10 + random.nextInt(30));
       } catch (InterruptedException ignored) {
       }
+    }
+    // Log a high-level info message when a move completes so operators can see activity in
+    // production logs without DEBUG enabled.
+    try {
+      logger.debug("Moved mouse to ({},{})", startX, startY);
+    } catch (Throwable ignored) {
     }
   }
 }

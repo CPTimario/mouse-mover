@@ -8,11 +8,7 @@ import io.github.cptimario.mousemover.platform.IdleTimeProvider;
  */
 public class MacOSIdleTimeProvider implements IdleTimeProvider {
   static {
-    try {
-      NativeLoader.load("libidle_time_mac.dylib");
-    } catch (Throwable t) {
-      // allow fallback
-    }
+    NativeLoader.load("libidle_time_mac.dylib");
   }
 
   private native long getIdleTimeMillisNative();
