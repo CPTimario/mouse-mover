@@ -19,7 +19,8 @@ jobs:
 
     env:
       APP_NAME: MouseMover
-      MAIN_CLASS: io.github.cptimario.mousemover.MouseMover
+      # Use the CLI Launcher as the application entrypoint (matches pom.xml shade config)
+      MAIN_CLASS: io.github.cptimario.mousemover.cli.Launcher
 
     steps:
       - name: Checkout
