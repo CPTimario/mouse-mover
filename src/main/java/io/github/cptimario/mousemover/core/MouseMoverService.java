@@ -237,11 +237,30 @@ public class MouseMoverService {
   }
 
   void moveMouseHumanLike(MouseRobot robot, Dimension screenSize) {
+    // Compute a safe rectangle inside the configured edge margin. If the configured
+    // edge margin leaves no safe area, fall back to the screen center (Option A).
+    final int safeLeft = edgeMargin;
+    final int safeTop = edgeMargin;
+    final int safeRight = screenSize.width - 1 - edgeMargin;
+    final int safeBottom = screenSize.height - 1 - edgeMargin;
+    final boolean hasSafeArea = safeRight >= safeLeft && safeBottom >= safeTop;
+    final int fallbackX = screenSize.width / 2;
+    final int fallbackY = screenSize.height / 2;
+
     if (micro) {
       final int dx = random.nextInt(5) - 2;
       final int dy = random.nextInt(5) - 2;
-      final int nx = Math.max(0, Math.min(screenSize.width - 1, lastMousePosition.x + dx));
-      final int ny = Math.max(0, Math.min(screenSize.height - 1, lastMousePosition.y + dy));
+      int nx = lastMousePosition.x + dx;
+      int ny = lastMousePosition.y + dy;
+      if (hasSafeArea) {
+        nx = Math.clamp(nx, safeLeft, safeRight);
+        ny = Math.clamp(ny, safeTop, safeBottom);
+      } else {
+        // No safe area: move to fallback center to avoid repeatedly placing pointer
+        // in edge-suppressed regions.
+        nx = fallbackX;
+        ny = fallbackY;
+      }
       if (verbose) {
         logger.debug(
             "Micro-jitter moving mouse from ({},{}) to ({},{})",
@@ -258,8 +277,15 @@ public class MouseMoverService {
       return;
     }
 
-    int targetX = random.nextInt(screenSize.width);
-    int targetY = random.nextInt(screenSize.height);
+    final int targetX;
+    final int targetY;
+    if (hasSafeArea) {
+      targetX = safeLeft + random.nextInt(safeRight - safeLeft + 1);
+      targetY = safeTop + random.nextInt(safeBottom - safeTop + 1);
+    } else {
+      targetX = fallbackX;
+      targetY = fallbackY;
+    }
 
     int startX = lastMousePosition.x;
     int startY = lastMousePosition.y;
@@ -280,6 +306,15 @@ public class MouseMoverService {
     for (int i = 0; i < steps; i++) {
       startX += dx + (random.nextInt(2 * jitter + 1) - jitter);
       startY += dy + (random.nextInt(2 * jitter + 1) - jitter);
+      // Clamp each intermediate step into the safe area (or keep within screen if
+      // no safe area is available — though in that case target was the center).
+      if (hasSafeArea) {
+        startX = Math.max(safeLeft, Math.min(safeRight, startX));
+        startY = Math.max(safeTop, Math.min(safeBottom, startY));
+      } else {
+        startX = Math.max(0, Math.min(screenSize.width - 1, startX));
+        startY = Math.max(0, Math.min(screenSize.height - 1, startY));
+      }
       robot.mouseMove(startX, startY);
       try {
         robot.sleepMillis(10 + random.nextInt(30));

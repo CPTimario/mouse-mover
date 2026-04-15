@@ -31,26 +31,52 @@ sessions active without looking robotic or predictable.
 
 3. Install and run the application
 
-### Alternatively: Use CI-built artifacts (developer or advanced users)
+### Alternatively: Use CI / release-built artifacts (developer or advanced users)
 
-If you prefer the lightweight packaged JAR or need native libraries directly, the GitHub Actions workflow `build-native` produces artifacts for each run:
+If you prefer a prebuilt installer, packaged JAR, or raw native libraries, the repository's release workflow (tag builds) produces build artifacts you can download from GitHub Actions or the Releases page.
 
-1. Open the repository Actions page and select the latest `build-native` run.
-2. In the selected run, open the **Artifacts** section and download one of the following:
+1. Open the repository Actions page and select the latest "Build & Release MouseMover" run (or open the matching GitHub Release for a tagged build).
+2. In the selected run's **Artifacts** section (or the Release assets) download the files you need. Artifacts uploaded by the workflow are renamed for clarity and will typically look like:
 
-   - `mouse-mover-package` — a packaged JAR that includes native libraries for macOS and Windows (embedded under `native/` resources)
-   - `libidle_time_mac.dylib` — macOS native library
-   - `idle_time_win.dll` — Windows native library
+   - `MouseMover-<version>-macOS.dmg` (macOS installer)
+   - `MouseMover-<version>-Windows.exe` (Windows installer)
+   - `MouseMover-<version>-Linux.deb` (Debian/Ubuntu package)
+   - `MouseMover-<version>-macOS.libidle_time_mac.dylib` (raw macOS native library)
+   - `MouseMover-<version>-Windows.idle_time_win.dll` (raw Windows native library)
+   - `*.sha256` and optionally `*.sha256.sig` (SHA-256 checksums and signatures)
 
-3. If you downloaded the packaged JAR, run it directly with:
+3. Run a packaged installer for your OS as usual. If you downloaded a JAR or the shaded JAR directly (for example from CI debug output or by building locally), run it with:
 
 ```bash
 java -jar mouse-mover-<version>-shaded.jar
 ```
 
-4. If you downloaded platform-native libraries and want to test them locally, place the binaries under `src/main/resources/native/` (for quick local testing) and run the application from Maven, or use the packaged JAR approach above.
+4. If you downloaded only platform-native libraries (e.g. `libidle_time_mac.dylib` or `idle_time_win.dll`) and want to test them locally without the installer, place the binaries under `src/main/resources/native/` so they are available at runtime as `/native/<filename>` inside the application JAR, then build/run the app from Maven:
 
-Security: the workflow also publishes SHA-256 checksums and optional GPG signatures for native artifacts. When present, the packaged JAR contains a `native/CHECKSUMS.txt` file that `NativeLoader` verifies at runtime before loading any embedded native library.
+```bash
+# macOS example
+cp libidle_time_mac.dylib src/main/resources/native/
+mvn clean package
+java -jar target/mouse-mover-<version>.jar --verbose
+```
+
+Security: the release workflow publishes SHA-256 checksums (and optionally GPG signatures). When present, the application includes a `NativeLoader` that will verify an embedded `native/CHECKSUMS.txt` (SHA-256) before extracting and loading any native library from `/native/` at runtime. Verify checksums locally with e.g.:
+
+```bash
+# macOS / Linux
+shasum -a 256 libidle_time_mac.dylib
+# or
+sha256sum libidle_time_mac.dylib
+```
+
+If a `.sha256.sig` (GPG signature) is provided, verify it using your GPG setup.
+
+Notes about CI and builds:
+- The release workflow uses a matrix build to produce installers on macOS, Windows and Linux and also builds the small native libraries (see `native-src/`).
+- The workflow uses the shaded JAR as the application input to `jpackage` for creating installers; raw native libraries and checksum files are uploaded as artifacts for convenience and debugging.
+- If you prefer to avoid downloads, you can build the native libraries locally using the scripts under `native-src/mac` and `native-src/win` (they require a JDK and native toolchain). After building, copy the produced `.dylib` / `.dll` into `src/main/resources/native/` and rebuild the Java project.
+
+The application will fall back to a pure‑Java idle time provider if a native library is not present or fails to load; native libraries are optional but provide more accurate OS-level idle detection.
 
 ---
 
@@ -61,7 +87,7 @@ Security: the workflow also publishes SHA-256 checksums and optional GPG signatu
 The app runs with sensible defaults. Important defaults in the current codebase are:
 
 ```bash
---idle 30 --interval 5 --jitter 1 --grace 5 --edge-margin 50 --fullscreen-detection=true
+--idle 30 --interval 5 --jitter 1 --grace 5 --edge-margin 50
 ```
 
 ---
@@ -76,7 +102,7 @@ The app runs with sensible defaults. Important defaults in the current codebase 
 | `--verbose`                  | `false`     | Enable verbose logs (DEBUG level)                            |
 | `--grace=SECONDS`            | `5`         | Extra randomized grace period added after activity (seconds) |
 | `--edge-margin=PIXELS`       | `50`        | Pixel margin from screen edge to suppress movement            |
-| `--fullscreen-detection`     | `true`      | Avoid moving mouse when a fullscreen app is detected         |
+| `--fullscreen-detection`     | `false`     | Avoid moving mouse when a fullscreen app is detected         |
 | `--micro`                    | `false`     | Use subtle micro-movements instead of full random moves      |
 
 ---

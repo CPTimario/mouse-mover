@@ -37,7 +37,7 @@ public class Launcher implements Callable<Integer> {
   @Option(
       names = "--fullscreen-detection",
       description = "Avoid moving mouse when fullscreen app is active")
-  boolean fullscreenDetection = true;
+  boolean fullscreenDetection;
 
   @Option(names = "--micro", description = "Use subtle micro-movements instead of large moves")
   boolean micro;
