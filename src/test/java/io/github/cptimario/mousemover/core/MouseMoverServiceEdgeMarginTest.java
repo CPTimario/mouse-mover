@@ -38,7 +38,8 @@ public class MouseMoverServiceEdgeMarginTest {
     }
 
     @Override
-    public IdleDecision evaluate(Instant lastMovementAttempt, Point lastMousePosition, Dimension screenSize) {
+    public IdleDecision evaluate(
+        Instant lastMovementAttempt, Point lastMousePosition, Dimension screenSize) {
       return new IdleDecision(true, "test");
     }
   }
@@ -49,7 +50,18 @@ public class MouseMoverServiceEdgeMarginTest {
     FixedRandom rnd = new FixedRandom(2, 3, 5);
     TestMouseRobot robot = new TestMouseRobot();
     MouseMoverService svc =
-        new MouseMoverService(5, 1, 0, 1, edgeMargin, false, true, true, rnd, new Point(50, 50), new AlwaysMoveDetector());
+        new MouseMoverService(
+            5,
+            1,
+            0,
+            1,
+            edgeMargin,
+            false,
+            true,
+            true,
+            rnd,
+            new Point(50, 50),
+            new AlwaysMoveDetector());
 
     Dimension screen = new Dimension(200, 100);
     svc.moveMouseHumanLike(robot, screen);
@@ -75,7 +87,18 @@ public class MouseMoverServiceEdgeMarginTest {
     FixedRandom rnd = new FixedRandom(0, 0, 0, 0, 0, 0);
     TestMouseRobot robot = new TestMouseRobot();
     MouseMoverService svc =
-        new MouseMoverService(5, 1, 0, 1, edgeMargin, false, false, true, rnd, new Point(60, 40), new AlwaysMoveDetector());
+        new MouseMoverService(
+            5,
+            1,
+            0,
+            1,
+            edgeMargin,
+            false,
+            false,
+            true,
+            rnd,
+            new Point(60, 40),
+            new AlwaysMoveDetector());
 
     Dimension screen = new Dimension(200, 120);
     svc.moveMouseHumanLike(robot, screen);
@@ -95,4 +118,3 @@ public class MouseMoverServiceEdgeMarginTest {
     }
   }
 }
-
