@@ -2,7 +2,6 @@ package io.github.cptimario.mousemover.platform;
 
 import io.github.cptimario.mousemover.platform.nativeimpl.MacOSIdleTimeProvider;
 import io.github.cptimario.mousemover.platform.nativeimpl.WindowsIdleTimeProvider;
-import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +24,10 @@ public final class IdleTimeProviderFactory {
       }
     } catch (Throwable t) {
       // Prefer the top-level message, but if that's null prefer the cause message
-      String reason = Optional.ofNullable(t.getMessage()).orElse(t.getCause().getMessage());
+      String reason =
+          t.getMessage() != null
+              ? t.getMessage()
+              : (t.getCause() != null ? t.getCause().getMessage() : t.getClass().getSimpleName());
       // Log a short, human-readable warning at WARN level and include the full
       // throwable only at DEBUG level to avoid noisy stacktraces in normal logs.
       logger.warn(
