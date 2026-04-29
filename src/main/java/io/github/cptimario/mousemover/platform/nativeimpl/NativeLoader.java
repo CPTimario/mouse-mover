@@ -50,6 +50,7 @@ public final class NativeLoader {
       }
 
       Path temp = Files.createTempFile(libName, null);
+      temp.toFile().deleteOnExit();
       Files.write(temp, bytes);
       System.load(temp.toAbsolutePath().toString());
     } catch (IOException e) {

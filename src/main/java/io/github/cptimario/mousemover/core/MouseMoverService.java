@@ -32,7 +32,6 @@ public class MouseMoverService {
   private final int edgeMargin;
   private final boolean verbose;
 
-  private volatile boolean running = false;
   private Point lastMousePosition;
   private Instant lastMovementAttempt = Instant.MIN;
   private IdleDetector detector;
@@ -131,7 +130,6 @@ public class MouseMoverService {
           intervalSeconds,
           TimeUnit.SECONDS);
 
-      running = true;
       logger.info("Mouse mover service started");
     } catch (AWTException e) {
       logger.error("Failed to start MouseMoverService: {}", e.getMessage(), e);
@@ -172,7 +170,6 @@ public class MouseMoverService {
       executor.scheduleAtFixedRate(
           () -> checkIdleAndMove(robotWrap, screenSize), 0, intervalSeconds, TimeUnit.SECONDS);
 
-      running = true;
       logger.info("Mouse mover service started");
     } catch (Exception e) {
       logger.error("Failed to start MouseMoverService: {}", e.getMessage(), e);
@@ -181,7 +178,6 @@ public class MouseMoverService {
   }
 
   public void stop() {
-    running = false;
     if (executor != null) executor.shutdownNow();
     stopLatch.countDown();
     logger.info("Mouse mover service stopped");

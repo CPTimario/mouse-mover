@@ -3,48 +3,15 @@ package io.github.cptimario.mousemover.core;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.github.cptimario.mousemover.detector.IdleDetector;
-import io.github.cptimario.mousemover.platform.JvmIdleTimeProvider;
+import io.github.cptimario.mousemover.testutil.AlwaysMoveDetector;
+import io.github.cptimario.mousemover.testutil.FixedRandom;
 import io.github.cptimario.mousemover.testutil.TestMouseRobot;
 import java.awt.Dimension;
 import java.awt.Point;
-import java.time.Instant;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
 public class MouseMoverServiceMoveTest {
-
-  // Fixed random that returns a repeating sequence of ints (modulo bound) to make moves
-  // deterministic
-  static class FixedRandom extends Random {
-    private final int[] seq;
-    private int idx = 0;
-
-    FixedRandom(int... seq) {
-      this.seq = seq.length == 0 ? new int[] {0} : seq;
-    }
-
-    @Override
-    public int nextInt(int bound) {
-      int v = seq[idx % seq.length];
-      idx++;
-      if (bound <= 0) return 0;
-      // ensure non-negative and within bound
-      return Math.abs(v) % bound;
-    }
-  }
-
-  static class AlwaysMoveDetector extends IdleDetector {
-    public AlwaysMoveDetector() {
-      super(new JvmIdleTimeProvider(), 1, 0, 1, false, 50, false, new Random(0));
-    }
-
-    @Override
-    public IdleDecision evaluate(
-        Instant lastMovementAttempt, Point lastMousePosition, Dimension screenSize) {
-      return new IdleDecision(true, "test");
-    }
-  }
 
   @Test
   public void testMoveMouseHumanLike_micro_movement() {

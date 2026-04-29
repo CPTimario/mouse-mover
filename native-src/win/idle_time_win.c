@@ -3,7 +3,7 @@
 #include <windows.h>
 
 JNIEXPORT jlong JNICALL
-Java_io_github_cptimario_mousemover_WindowsIdleTimeProvider_getIdleTimeMillisNative(JNIEnv *env, jobject obj) {
+Java_io_github_cptimario_mousemover_platform_nativeimpl_WindowsIdleTimeProvider_getIdleTimeMillisNative(JNIEnv *env, jobject obj) {
     LASTINPUTINFO lii;
     lii.cbSize = sizeof(LASTINPUTINFO);
 
@@ -11,7 +11,9 @@ Java_io_github_cptimario_mousemover_WindowsIdleTimeProvider_getIdleTimeMillisNat
         return 0;
     }
 
-    DWORD tickCount = GetTickCount();
-    return (jlong)(tickCount - lii.dwTime);
+    // GetTickCount64 avoids a race between the two calls; truncate to DWORD so
+    // unsigned 32-bit arithmetic handles the 49.7-day DWORD rollover correctly.
+    DWORD tickCount = (DWORD)GetTickCount64();
+    return (jlong)(DWORD)(tickCount - lii.dwTime);
 }
 

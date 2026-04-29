@@ -3,7 +3,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 
 JNIEXPORT jlong JNICALL
-Java_io_github_cptimario_mousemover_MacOSIdleTimeProvider_getIdleTimeMillisNative(JNIEnv *env, jobject obj) {
+Java_io_github_cptimario_mousemover_platform_nativeimpl_MacOSIdleTimeProvider_getIdleTimeMillisNative(JNIEnv *env, jobject obj) {
     CFTimeInterval idleTime = CGEventSourceSecondsSinceLastEventType(
             kCGEventSourceStateCombinedSessionState,
             kCGAnyInputEventType

@@ -58,7 +58,6 @@ public class Launcher implements Callable<Integer> {
     // the test-friendly entrypoint (`executeForTests`) can execute CLI parsing
     // without hanging the JVM.
     if (testMode) {
-      createService();
       return 0;
     }
 
