@@ -30,7 +30,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          VERSION=${GITHUB_REF#refs/tags/v}
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
+          fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Set up JDK 25
