@@ -192,14 +192,14 @@ mvn clean package
 Every push to `main` automatically:
 
 1. Runs CI (format check, tests, static analysis)
-2. Strips `-SNAPSHOT`, tags the commit as `v<version>`, and sets the next snapshot in `pom.xml`
+2. Computes the next version from the latest git tag and tags the current commit
 3. Builds platform installers (macOS `.dmg`, Windows `.exe`, Linux `.deb`) and `mouse-mover.jar`
 4. Publishes a GitHub Release with those assets
 
-**Patch** versions increment automatically. To cut a **minor** or **major** release, set the version in `pom.xml` before merging:
+**Patch** versions increment automatically from the latest tag. To cut a **minor** or **major** release, set the `pom.xml` version before merging — the workflow uses it as the baseline when no matching tag exists yet:
 
 ```xml
-<!-- triggers a v2.1.0 release -->
+<!-- triggers a v2.1.0 release (when no v2.1.* tag exists) -->
 <version>2.1.0-SNAPSHOT</version>
 ```
 

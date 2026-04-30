@@ -40,7 +40,7 @@ jobs:
         run: mvn -B -U verify
 
   # -----------------------
-  # Tag release, prepare next snapshot
+  # Tag the current commit with the next version
   # -----------------------
   bump-version:
     needs: ci
@@ -59,36 +59,25 @@ jobs:
           distribution: temurin
           java-version: '25'
 
-      - name: Compute release and next snapshot versions
+      - name: Compute next version
         id: compute
         run: |
-          CURRENT=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
-          RELEASE=${CURRENT%-SNAPSHOT}
-          IFS='.' read -r MAJOR MINOR PATCH <<< "$RELEASE"
-          NEXT="$MAJOR.$MINOR.$((PATCH + 1))-SNAPSHOT"
-          echo "version=$RELEASE" >> $GITHUB_OUTPUT
-          echo "next=$NEXT" >> $GITHUB_OUTPUT
+          POM=$(mvn -q -DforceStdout help:evaluate -Dexpression=project.version)
+          BASE=${POM%-SNAPSHOT}
+          IFS='.' read -r MAJOR MINOR _ <<< "$BASE"
+          LATEST=$(git tag -l "v${MAJOR}.${MINOR}.*" --sort=-v:refname | head -n 1)
+          if [ -z "$LATEST" ]; then
+            VERSION="$BASE"
+          else
+            PATCH=${LATEST##*.}
+            VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - name: Configure git
+      - name: Tag and push
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit release version and tag
-        run: |
-          mvn -B versions:set -DnewVersion=${{ steps.compute.outputs.version }} -DgenerateBackupPoms=false
-          git add pom.xml
-          git commit -m "chore: release ${{ steps.compute.outputs.version }}"
           git tag "v${{ steps.compute.outputs.version }}"
-
-      - name: Commit next snapshot version
-        run: |
-          mvn -B versions:set -DnewVersion=${{ steps.compute.outputs.next }} -DgenerateBackupPoms=false
-          git add pom.xml
-          git commit -m "chore: prepare ${{ steps.compute.outputs.next }} [skip ci]"
-
-      - name: Push commits and tag
-        run: git push origin main --follow-tags
+          git push origin "v${{ steps.compute.outputs.version }}"
 
   # -----------------------
   # Build platform packages
