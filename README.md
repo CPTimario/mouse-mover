@@ -33,31 +33,31 @@ sessions active without looking robotic or predictable.
 
 ### Alternatively: Use CI / release-built artifacts (developer or advanced users)
 
-If you prefer a prebuilt installer, packaged JAR, or raw native libraries, the repository's release workflow (tag builds) produces build artifacts you can download from GitHub Actions or the Releases page.
+Every push to `main` automatically triggers a release via the **CI & Release** workflow. Artifacts are available on the [Releases page](https://github.com/cptimario/mouse-mover/releases) or in the Actions run's **Artifacts** section.
 
-1. Open the repository Actions page and select the latest "Build & Release MouseMover" run (or open the matching GitHub Release for a tagged build).
-2. In the selected run's **Artifacts** section (or the Release assets) download the files you need. Artifacts uploaded by the workflow are renamed for clarity and will typically look like:
+Release assets are renamed for clarity and look like:
 
-   - `MouseMover-<version>-macOS.dmg` (macOS installer)
-   - `MouseMover-<version>-Windows.exe` (Windows installer)
-   - `MouseMover-<version>-Linux.deb` (Debian/Ubuntu package)
-   - `MouseMover-<version>-macOS.libidle_time_mac.dylib` (raw macOS native library)
-   - `MouseMover-<version>-Windows.idle_time_win.dll` (raw Windows native library)
-   - `*.sha256` and optionally `*.sha256.sig` (SHA-256 checksums and signatures)
+- `MouseMover-<version>-macOS.dmg` (macOS installer)
+- `MouseMover-<version>-Windows.exe` (Windows installer)
+- `MouseMover-<version>-Linux.deb` (Debian/Ubuntu package)
+- `mouse-mover.jar` (platform-independent executable JAR)
+- `MouseMover-<version>-macOS.libidle_time_mac.dylib` (raw macOS native library)
+- `MouseMover-<version>-Windows.idle_time_win.dll` (raw Windows native library)
+- `*.sha256` and optionally `*.sha256.sig` (SHA-256 checksums and signatures)
 
-3. Run a packaged installer for your OS as usual. If you downloaded a JAR or the shaded JAR directly (for example from CI debug output or by building locally), run it with:
+Run a packaged installer for your OS as usual. To run the JAR directly:
 
 ```bash
-java -jar mouse-mover-<version>-shaded.jar
+java -jar mouse-mover.jar
 ```
 
-4. If you downloaded only platform-native libraries (e.g. `libidle_time_mac.dylib` or `idle_time_win.dll`) and want to test them locally without the installer, place the binaries under `src/main/resources/native/` so they are available at runtime as `/native/<filename>` inside the application JAR, then build/run the app from Maven:
+If you downloaded only platform-native libraries (e.g. `libidle_time_mac.dylib` or `idle_time_win.dll`) and want to test them locally without the installer, place the binaries under `src/main/resources/native/` so they are available at runtime as `/native/<filename>` inside the application JAR, then build/run the app from Maven:
 
 ```bash
 # macOS example
 cp libidle_time_mac.dylib src/main/resources/native/
 mvn clean package
-java -jar target/mouse-mover-<version>.jar --verbose
+java -jar target/mouse-mover.jar --verbose
 ```
 
 Security: the release workflow publishes SHA-256 checksums (and optionally GPG signatures). When present, the application includes a `NativeLoader` that will verify an embedded `native/CHECKSUMS.txt` (SHA-256) before extracting and loading any native library from `/native/` at runtime. Verify checksums locally with e.g.:
@@ -72,7 +72,7 @@ sha256sum libidle_time_mac.dylib
 If a `.sha256.sig` (GPG signature) is provided, verify it using your GPG setup.
 
 Notes about CI and builds:
-- The release workflow uses a matrix build to produce installers on macOS, Windows and Linux and also builds the small native libraries (see `native-src/`).
+- The workflow uses a matrix build to produce installers on macOS, Windows and Linux and also builds the small native libraries (see `native-src/`).
 - The workflow uses the shaded JAR as the application input to `jpackage` for creating installers; raw native libraries and checksum files are uploaded as artifacts for convenience and debugging.
 - If you prefer to avoid downloads, you can build the native libraries locally using the scripts under `native-src/mac` and `native-src/win` (they require a JDK and native toolchain). After building, copy the produced `.dylib` / `.dll` into `src/main/resources/native/` and rebuild the Java project.
 
@@ -189,18 +189,19 @@ mvn clean package
 
 ### Create release (automated)
 
-Releases are built automatically via GitHub Actions:
+Every push to `main` automatically:
 
-```bash
-git tag v1.2.0
-git push origin v1.2.0
+1. Runs CI (format check, tests, static analysis)
+2. Strips `-SNAPSHOT`, tags the commit as `v<version>`, and sets the next snapshot in `pom.xml`
+3. Builds platform installers (macOS `.dmg`, Windows `.exe`, Linux `.deb`) and `mouse-mover.jar`
+4. Publishes a GitHub Release with those assets
+
+**Patch** versions increment automatically. To cut a **minor** or **major** release, set the version in `pom.xml` before merging:
+
+```xml
+<!-- triggers a v2.1.0 release -->
+<version>2.1.0-SNAPSHOT</version>
 ```
-
-This will:
-
-* Build the application
-* Generate installers for all platforms
-* Publish a GitHub Release with downloadable assets
 
 ---
 
