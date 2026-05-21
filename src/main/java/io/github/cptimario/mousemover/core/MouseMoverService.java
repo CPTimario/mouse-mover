@@ -1,6 +1,7 @@
 package io.github.cptimario.mousemover.core;
 
 import io.github.cptimario.mousemover.detector.IdleDetector;
+import io.github.cptimario.mousemover.platform.IdleTimeProvider;
 import io.github.cptimario.mousemover.platform.IdleTimeProviderFactory;
 import io.github.cptimario.mousemover.platform.JvmIdleTimeProvider;
 import java.awt.AWTException;
@@ -35,6 +36,7 @@ public class MouseMoverService {
   private Point lastMousePosition;
   private Instant lastMovementAttempt = Instant.MIN;
   private IdleDetector detector;
+  private IdleTimeProvider provider;
 
   private final CountDownLatch stopLatch;
   private ScheduledExecutorService executor;
@@ -100,7 +102,7 @@ public class MouseMoverService {
       Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 
       final JvmIdleTimeProvider fallback = new JvmIdleTimeProvider();
-      final var provider = IdleTimeProviderFactory.create(fallback);
+      provider = IdleTimeProviderFactory.create(fallback);
       detector =
           new IdleDetector(
               provider,
@@ -152,7 +154,7 @@ public class MouseMoverService {
   void startWithRobot(MouseRobot robotWrap, Dimension screenSize) {
     try {
       final JvmIdleTimeProvider fallback = new JvmIdleTimeProvider();
-      final var provider = IdleTimeProviderFactory.create(fallback);
+      provider = IdleTimeProviderFactory.create(fallback);
       if (detector == null) {
         detector =
             new IdleDetector(
@@ -179,6 +181,13 @@ public class MouseMoverService {
 
   public void stop() {
     if (executor != null) executor.shutdownNow();
+    if (provider != null) {
+      try {
+        provider.close();
+      } catch (Exception e) {
+        logger.debug("Failed to close idle time provider: {}", e.getMessage(), e);
+      }
+    }
     stopLatch.countDown();
     logger.info("Mouse mover service stopped");
   }
