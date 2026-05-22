@@ -110,7 +110,6 @@ public class MouseMoverService {
               graceSeconds,
               intervalSeconds,
               fullscreenDetection,
-              edgeMargin,
               micro,
               random);
 
@@ -163,7 +162,6 @@ public class MouseMoverService {
                 graceSeconds,
                 intervalSeconds,
                 fullscreenDetection,
-                edgeMargin,
                 micro,
                 random);
       }
@@ -217,8 +215,7 @@ public class MouseMoverService {
       }
     }
 
-    IdleDetector.IdleDecision decision =
-        detector.evaluate(lastMovementAttempt, lastMousePosition, screenSize);
+    IdleDetector.IdleDecision decision = detector.evaluate(lastMovementAttempt, screenSize);
     if (decision.shouldMove()) {
       if (verbose) {
         logger.debug("IdleDetector decision: move (reason={})", decision.reason());
