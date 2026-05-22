@@ -17,12 +17,11 @@ public class MouseMoverServiceTest {
 
   static class NeverMoveDetector extends IdleDetector {
     public NeverMoveDetector() {
-      super(new JvmIdleTimeProvider(), 1, 0, 1, false, 50, false, new Random(0));
+      super(new JvmIdleTimeProvider(), 1, 0, 1, false, false, new Random(0));
     }
 
     @Override
-    public IdleDecision evaluate(
-        Instant lastMovementAttempt, Point lastMousePosition, Dimension screenSize) {
+    public IdleDecision evaluate(Instant lastMovementAttempt, Dimension screenSize) {
       return new IdleDecision(false, "test");
     }
   }

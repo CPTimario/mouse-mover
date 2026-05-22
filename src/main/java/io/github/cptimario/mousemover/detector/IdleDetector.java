@@ -3,7 +3,6 @@ package io.github.cptimario.mousemover.detector;
 import io.github.cptimario.mousemover.platform.IdleTimeProvider;
 import java.awt.Dimension;
 import java.awt.GraphicsEnvironment;
-import java.awt.Point;
 import java.awt.Rectangle;
 import java.time.Duration;
 import java.time.Instant;
@@ -19,7 +18,6 @@ public class IdleDetector {
   private final int graceSeconds;
   private final int intervalSeconds;
   private final boolean fullscreenDetection;
-  private final int edgeMargin;
   private final boolean micro;
   private final Random random;
   private final IdleTimeProvider idleProvider;
@@ -30,7 +28,6 @@ public class IdleDetector {
       int graceSeconds,
       int intervalSeconds,
       boolean fullscreenDetection,
-      int edgeMargin,
       boolean micro,
       Random random) {
     this.idleProvider = Objects.requireNonNull(idleProvider, "idleProvider");
@@ -38,15 +35,11 @@ public class IdleDetector {
     this.graceSeconds = Math.max(0, graceSeconds);
     this.intervalSeconds = intervalSeconds;
     this.fullscreenDetection = fullscreenDetection;
-    this.edgeMargin = Math.max(0, edgeMargin);
     this.micro = micro;
     this.random = (random == null) ? new Random() : random;
   }
 
-  public IdleDecision evaluate(
-      final Instant lastMovementAttempt,
-      final Point lastMousePosition,
-      final Dimension screenSize) {
+  public IdleDecision evaluate(final Instant lastMovementAttempt, final Dimension screenSize) {
     long idleTime = idleProvider.getIdleTimeSeconds();
     long sinceLastMove = Duration.between(lastMovementAttempt, Instant.now()).toSeconds();
 
@@ -66,10 +59,6 @@ public class IdleDetector {
 
     if (fullscreenDetection && isLikelyFullscreen(screenSize)) {
       return new IdleDecision(false, "fullscreen-detected");
-    }
-
-    if (lastMousePosition != null && isNearEdge(lastMousePosition, screenSize)) {
-      return new IdleDecision(false, "near-edge");
     }
 
     return new IdleDecision(true, micro ? "micro-move" : "move");
@@ -97,14 +86,6 @@ public class IdleDetector {
     } catch (Exception e) {
       return false;
     }
-  }
-
-  private boolean isNearEdge(Point p, Dimension screen) {
-    int margin = edgeMargin;
-    return p.x < margin
-        || p.y < margin
-        || p.x > screen.width - margin
-        || p.y > screen.height - margin;
   }
 
   public record IdleDecision(boolean shouldMove, String reason) {}
